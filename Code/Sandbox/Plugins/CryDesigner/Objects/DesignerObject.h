@@ -24,6 +24,7 @@ struct DesignerObjectFlags
 	bool            noDynWater;
 	bool            noStaticDecals;
 	bool            excludeCollision;
+	bool            disablePhysicsProxy;
 	bool            occluder;
 	bool            ignoreTerrainLayerBlend;
 	bool            ignoreDecalBlend;
