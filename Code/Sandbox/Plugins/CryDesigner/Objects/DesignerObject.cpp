@@ -686,12 +686,14 @@ void DesignerObjectFlags::Update()
 	ModifyFlag<uint64>(nFlags, ERF_FOB_ALLOW_TERRAIN_LAYER_BLEND, !ignoreTerrainLayerBlend);
 	ModifyFlag<uint64>(nFlags, ERF_FOB_ALLOW_DECAL_BLEND, !ignoreDecalBlend);
 	ModifyFlag<int>(statobjFlags, STATIC_OBJECT_NO_PLAYER_COLLIDE, excludeCollision);
+	
+	const bool isPhysicalizated = m_pObj->GetCompiler()->CheckFlags(ECompilerFlag::eCompiler_Physicalize);
 
-	if (disablePhysicsProxy && m_pObj->GetCompiler()->CheckFlags(ECompilerFlag::eCompiler_Physicalize))
+	if (disablePhysicsProxy)
 	{
 		m_pObj->GetCompiler()->RemoveFlags(ECompilerFlag::eCompiler_Physicalize);
 	}
-	else if (!disablePhysicsProxy && !m_pObj->GetCompiler()->CheckFlags(ECompilerFlag::eCompiler_Physicalize))
+	else
 	{
 		m_pObj->GetCompiler()->AddFlags(ECompilerFlag::eCompiler_Physicalize);
 	}
