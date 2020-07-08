@@ -608,6 +608,7 @@ DesignerObjectFlags::DesignerObjectFlags() : m_pObj(NULL)
 	noDynWater = false;
 	noStaticDecals = false;
 	excludeCollision = false;
+	disablePhysicsProxy = false;
 	occluder = false;
 	ignoreTerrainLayerBlend = false;
 	ignoreDecalBlend = false;
@@ -631,6 +632,7 @@ void DesignerObjectFlags::Set()
 	excludeCollision = (statobjFlags & STATIC_OBJECT_NO_PLAYER_COLLIDE) != 0;
 	ignoreTerrainLayerBlend = (flags & ERF_FOB_ALLOW_TERRAIN_LAYER_BLEND) == 0;
 	ignoreDecalBlend = (flags & ERF_FOB_ALLOW_DECAL_BLEND) == 0;
+	disablePhysicsProxy = !m_pObj->GetCompiler()->CheckFlags(ECompilerFlag::eCompiler_Physicalize);
 }
 
 void DesignerObjectFlags::Serialize(Serialization::IArchive& ar)
@@ -645,10 +647,11 @@ void DesignerObjectFlags::Serialize(Serialization::IArchive& ar)
 	ar(hideable, "hideable", "AI Hideable");
 	ar(noDynWater, "noDynWater", "No Dynamic Water");
 	ar(noStaticDecals, "noStaticDecals", "No Static Decal");
-	ar(excludeCollision, "excludeCollision", "Exclude Collision");
+	ar(excludeCollision, "excludeCollision", "Exclude collision with player");
 	ar(occluder, "occluder", "Occluder");
 	ar(ignoreTerrainLayerBlend, "ignoreTerrainLayerBlend", "Ignore Terrain Layer Blending");
 	ar(ignoreDecalBlend, "ignoreDecalBlend", "Ignore Decal Blending");
+	ar(disablePhysicsProxy, "disablePhysProxy", "Disable physics proxy");
 	if (ar.isInput())
 		Update();
 }
@@ -683,6 +686,15 @@ void DesignerObjectFlags::Update()
 	ModifyFlag<uint64>(nFlags, ERF_FOB_ALLOW_TERRAIN_LAYER_BLEND, !ignoreTerrainLayerBlend);
 	ModifyFlag<uint64>(nFlags, ERF_FOB_ALLOW_DECAL_BLEND, !ignoreDecalBlend);
 	ModifyFlag<int>(statobjFlags, STATIC_OBJECT_NO_PLAYER_COLLIDE, excludeCollision);
+	
+	if (disablePhysicsProxy)
+	{
+		m_pObj->GetCompiler()->RemoveFlags(ECompilerFlag::eCompiler_Physicalize);
+	}
+	else
+	{
+		m_pObj->GetCompiler()->AddFlags(ECompilerFlag::eCompiler_Physicalize);
+	}
 
 	m_pObj->GetCompiler()->SetViewDistRatio(ratioViewDist);
 	m_pObj->GetCompiler()->SetRenderFlags(nFlags);
