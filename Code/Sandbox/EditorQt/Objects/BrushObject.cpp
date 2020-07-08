@@ -130,6 +130,7 @@ CBrushObject::CBrushObject()
 	mv_ignoreTerrainLayerBlend = false;
 	mv_ignoreDecalBlend = false;
 	mv_shadowLodBias = 0;
+	mv_disablePhysics = false;
 
 	static string sVarName_OutdoorOnly = "IgnoreVisareas";
 	//	static string sVarName_CastShadows = "CastShadows";
@@ -159,6 +160,7 @@ CBrushObject::CBrushObject()
 	static string sVarName_ShadowLodBias = "ShadowLodBias";
 	static string sVarName_IgnoreTerrainLayerBlend = "IgnoreTerrainLayerBlend";
 	static string sVarName_IgnoreDecalBlend = "IgnoreDecalBlend";
+	static string sVarName_DisablePhysics = "DisablePhysicsProxy";
 
 	CVarEnumList<int>* pHideModeList = new CVarEnumList<int>;
 	pHideModeList->AddItem("None", 0);
@@ -190,6 +192,7 @@ CBrushObject::CBrushObject()
 	m_pVarObject->AddVariable(mv_shadowLodBias, sVarName_ShadowLodBias, functor(*this, &CBrushObject::OnRenderVarChange));
 	m_pVarObject->AddVariable(mv_ignoreTerrainLayerBlend, sVarName_IgnoreTerrainLayerBlend, functor(*this, &CBrushObject::OnRenderVarChange));
 	m_pVarObject->AddVariable(mv_ignoreDecalBlend, sVarName_IgnoreDecalBlend, functor(*this, &CBrushObject::OnRenderVarChange));
+	m_pVarObject->AddVariable(mv_disablePhysics, sVarName_DisablePhysics, functor(*this, &CBrushObject::OnPhysicsVarChange));
 
 	mv_ratioLOD.SetLimits(0, 255);
 	mv_ratioViewDist.SetLimits(0, 255);
@@ -681,6 +684,34 @@ void CBrushObject::OnExludeFromNavigationVarChange(IVariable* var)
 	GetIEditorImpl()->GetAIManager()->OnAreaModified(bbox);
 }
 
+void CBrushObject::OnPhysicsVarChange(IVariable* var)
+{
+	if (!m_pRenderNode)
+		return;
+
+	if (!mv_disablePhysics)
+	{
+		IBrush* pBrushRenderNode = static_cast<IBrush*>(m_pRenderNode);
+		if (pBrushRenderNode)
+		{
+			pBrushRenderNode->DisablePhysicalization(false);
+		}
+
+		m_pRenderNode->Dephysicalize();
+		m_pRenderNode->Physicalize();
+	}
+	else
+	{
+		IBrush* pBrushRenderNode = static_cast<IBrush*>(m_pRenderNode);
+		if (pBrushRenderNode)
+		{
+			pBrushRenderNode->DisablePhysicalization(true);
+		}
+
+		m_pRenderNode->Dephysicalize();
+	}
+}
+
 void CBrushObject::OnAIRadiusVarChange(IVariable* var)
 {
 	if (m_bIgnoreNodeUpdate)
@@ -762,6 +793,7 @@ void CBrushObject::CreateInspectorWidgets(CInspectorWidgetCreator& creator)
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_shadowLodBias, ar);
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_ignoreTerrainLayerBlend, ar);
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_ignoreDecalBlend, ar);
+		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_disablePhysics, ar);
 		}
 
 		if (ar.openBlock("cgf", "<CGF"))
@@ -872,8 +904,10 @@ void CBrushObject::UpdateEngineNode(bool bOnlyTransform)
 	if (mv_Occluder)
 		renderFlags |= ERF_GOOD_OCCLUDER;
 	((IBrush*)m_pRenderNode)->SetDrawLast(mv_drawLast);
-	if (m_pRenderNode->GetRndFlags() & ERF_COLLISION_PROXY)
+
+	if ((m_pRenderNode->GetRndFlags() & ERF_COLLISION_PROXY) && !mv_disablePhysics)
 		renderFlags |= ERF_COLLISION_PROXY;
+
 	if (m_pRenderNode->GetRndFlags() & ERF_RAYCAST_PROXY)
 		renderFlags |= ERF_RAYCAST_PROXY;
 	if (IsSelected())
@@ -884,6 +918,9 @@ void CBrushObject::UpdateEngineNode(bool bOnlyTransform)
 		renderFlags |= ERF_FOB_ALLOW_TERRAIN_LAYER_BLEND;
 	if (!mv_ignoreDecalBlend)
 		renderFlags |= ERF_FOB_ALLOW_DECAL_BLEND;
+
+	if (mv_disablePhysics)
+		renderFlags |= ERF_NO_PHYSICS;
 
 	m_renderFlags = renderFlags;
 
@@ -935,7 +972,7 @@ void CBrushObject::UpdateEngineNode(bool bOnlyTransform)
 	// Setting the objects layer modified, this is to ensure that if this object is embedded in a prefab that it is properly saved.
 	this->SetLayerModified();
 
-	return;
+	OnPhysicsVarChange(nullptr);
 }
 
 IStatObj* CBrushObject::GetIStatObj()
@@ -989,8 +1026,8 @@ void CBrushObject::UpdateVisibility(bool visible)
 	// when the brush is made visible then its physics proxies will most likely be incorrect
 	if (visible && m_RePhysicalizeOnVisible && m_pRenderNode)
 	{
-		m_pRenderNode->Dephysicalize();
-		m_pRenderNode->Physicalize();
+		OnPhysicsVarChange(nullptr);
+
 		m_RePhysicalizeOnVisible = false;
 	}
 }
@@ -1105,7 +1142,7 @@ void CBrushObject::EndSubObjectSelection()
 	{
 		m_pGeometry->EndSubObjSelection();
 		UpdateEngineNode(true);
-		if (m_pRenderNode)
+		if (m_pRenderNode && !mv_disablePhysics)
 			m_pRenderNode->Physicalize();
 		m_pGeometry->GetBounds(m_bbox);
 	}
