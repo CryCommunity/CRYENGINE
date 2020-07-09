@@ -102,6 +102,7 @@ protected:
 	void OnRenderVarChange(IVariable* var);
 	void OnAIRadiusVarChange(IVariable* var);
 	void OnExludeFromNavigationVarChange(IVariable* var);
+	void OnPhysicsVarChange(IVariable* var);
 	//////////////////////////////////////////////////////////////////////////
 
 	virtual string GetMouseOverStatisticsText() const;
@@ -146,6 +147,7 @@ protected:
 	CVariable<int>                mv_shadowLodBias;
 	CVariable<bool>               mv_ignoreTerrainLayerBlend;
 	CVariable<bool>               mv_ignoreDecalBlend;
+	CVariable<bool>               mv_physicalize;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Rendering flags.
