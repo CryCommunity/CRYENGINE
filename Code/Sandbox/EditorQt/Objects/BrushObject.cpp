@@ -130,7 +130,7 @@ CBrushObject::CBrushObject()
 	mv_ignoreTerrainLayerBlend = false;
 	mv_ignoreDecalBlend = false;
 	mv_shadowLodBias = 0;
-	mv_physicalizate = true;
+	mv_physicalize = true;
 
 	static string sVarName_OutdoorOnly = "IgnoreVisareas";
 	//	static string sVarName_CastShadows = "CastShadows";
@@ -160,7 +160,7 @@ CBrushObject::CBrushObject()
 	static string sVarName_ShadowLodBias = "ShadowLodBias";
 	static string sVarName_IgnoreTerrainLayerBlend = "IgnoreTerrainLayerBlend";
 	static string sVarName_IgnoreDecalBlend = "IgnoreDecalBlend";
-	static string sVarName_Physicalizate = "Physicalizate";
+	static string sVarName_Physicalize = "Physicalize";
 
 	CVarEnumList<int>* pHideModeList = new CVarEnumList<int>;
 	pHideModeList->AddItem("None", 0);
@@ -192,7 +192,7 @@ CBrushObject::CBrushObject()
 	m_pVarObject->AddVariable(mv_shadowLodBias, sVarName_ShadowLodBias, functor(*this, &CBrushObject::OnRenderVarChange));
 	m_pVarObject->AddVariable(mv_ignoreTerrainLayerBlend, sVarName_IgnoreTerrainLayerBlend, functor(*this, &CBrushObject::OnRenderVarChange));
 	m_pVarObject->AddVariable(mv_ignoreDecalBlend, sVarName_IgnoreDecalBlend, functor(*this, &CBrushObject::OnRenderVarChange));
-	m_pVarObject->AddVariable(mv_physicalizate, sVarName_Physicalizate, functor(*this, &CBrushObject::OnPhysicsVarChange));
+	m_pVarObject->AddVariable(mv_physicalize, sVarName_Physicalize, functor(*this, &CBrushObject::OnPhysicsVarChange));
 
 	mv_ratioLOD.SetLimits(0, 255);
 	mv_ratioViewDist.SetLimits(0, 255);
@@ -691,7 +691,7 @@ void CBrushObject::OnPhysicsVarChange(IVariable* var)
 	if (!pBrushRenderNode)
 		return;
 
-	if (mv_physicalizate)
+	if (mv_physicalize)
 	{
 		pBrushRenderNode->DisablePhysicalization(false);
 
@@ -787,7 +787,7 @@ void CBrushObject::CreateInspectorWidgets(CInspectorWidgetCreator& creator)
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_shadowLodBias, ar);
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_ignoreTerrainLayerBlend, ar);
 		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_ignoreDecalBlend, ar);
-		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_physicalizate, ar);
+		  pObject->m_pVarObject->SerializeVariable(&pObject->mv_physicalize, ar);
 		}
 
 		if (ar.openBlock("cgf", "<CGF"))
@@ -899,7 +899,7 @@ void CBrushObject::UpdateEngineNode(bool bOnlyTransform)
 		renderFlags |= ERF_GOOD_OCCLUDER;
 	((IBrush*)m_pRenderNode)->SetDrawLast(mv_drawLast);
 
-	if ((m_pRenderNode->GetRndFlags() & ERF_COLLISION_PROXY) && mv_physicalizate)
+	if ((m_pRenderNode->GetRndFlags() & ERF_COLLISION_PROXY) && mv_physicalize)
 		renderFlags |= ERF_COLLISION_PROXY;
 
 	if (m_pRenderNode->GetRndFlags() & ERF_RAYCAST_PROXY)
@@ -913,7 +913,7 @@ void CBrushObject::UpdateEngineNode(bool bOnlyTransform)
 	if (!mv_ignoreDecalBlend)
 		renderFlags |= ERF_FOB_ALLOW_DECAL_BLEND;
 
-	if (!mv_physicalizate)
+	if (!mv_physicalize)
 		renderFlags |= ERF_NO_PHYSICS;
 
 	m_renderFlags = renderFlags;
@@ -1136,7 +1136,7 @@ void CBrushObject::EndSubObjectSelection()
 	{
 		m_pGeometry->EndSubObjSelection();
 		UpdateEngineNode(true);
-		if (m_pRenderNode && mv_physicalizate)
+		if (m_pRenderNode && mv_physicalize)
 			m_pRenderNode->Physicalize();
 		m_pGeometry->GetBounds(m_bbox);
 	}
