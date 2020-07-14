@@ -207,7 +207,7 @@ protected:
 	void AddCommentItem(CAbstractCommentItem& comment);
 	void AddConnectionItem(CAbstractConnectionItem& connection);
 
-	void BroadcastSelectionChange(bool forceClear = false);
+	virtual void BroadcastSelectionChange(bool forceClear = false);
 
 private:
 
