@@ -699,6 +699,8 @@ void CD3D9Renderer::HandleDisplayPropertyChanges(std::shared_ptr<CGraphicsPipeli
 
 			if (bMainContext)
 				CRendererResources::OnDisplayResolutionChanged(displayWidth, displayHeight);
+			
+			gEnv->pSystem->GetISystemEventDispatcher()->OnSystemEvent(ESystemEvent::ESYSTEM_EVENT_DISPLAY_CHANGED, displayWidth, displayHeight);
 		}
 
 		if (bChangedOutputting)
